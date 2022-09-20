@@ -1,11 +1,13 @@
 #include<iostream>
 #include<string.h>
+#include<vector>
 #include "Card.h"
 #include "Player.h"
 
 using namespace std;
 
-enum class Ranks{
+enum Ranks
+{
     Two = 2,
     Three,
     Four,
@@ -21,24 +23,32 @@ enum class Ranks{
     Ace
 };
 
-enum class Suits{
+enum Suits
+{
     Spades,
     Clubs,
     Diamonds,
     Hearts
 };
 
-struct Card {
+struct Card 
+{
     Ranks rank;
     Suits suit;
     int faceVal;
+
+    void printCard()
+    {
+        std::cout << rank << " of " << suit << endl;
+    }
 };
 
-struct Deck{
+struct Deck
+{
     Card card_array[52];
 
-    void initDeck(){
-        
+    void initDeck()
+    {
         Card tmpCard;
         int cnt = 0;
 
@@ -55,10 +65,30 @@ struct Deck{
             }
         }
     }
+
+    void printDeck()
+    {
+        for (int i = 0 ; i < 52 ; i ++)
+        {
+            card_array[i].printCard();
+        }
+    }
+
+    void shuffle()
+    {
+        
+    }
 };
 
-int main(void){
+struct Player
+{
+    vector<Card> hand;
+};
 
+int main(void)
+{
     Deck deck;
     deck.initDeck();
+    deck.printDeck();
+    deck.shuffle();
 }
