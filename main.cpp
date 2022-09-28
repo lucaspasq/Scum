@@ -48,24 +48,37 @@ struct Deck
 struct Player
 {
     vector<Card> hand;
+    string playerName;
+};
+
+struct Scum
+{
+    vector<Player> players;
+    Deck deck;
+    Deck muck;
+    Deck centerCards;
+    int numPlayers;
+    int handSize = deck.deck_size / numPlayers;
 };
 
 //Function declarations
+void initScum(Scum &scum);
 void initDeck(Deck &deck);
 void printDeck(Deck &deck);
 void printCard(Card &card);
 void shuffle(Deck &deck);
+void dealHands(Scum &scum);
+void printHand(vector<Card> &hand, int handSize);
+void addPlayers(Scum &scum);
+void showScum(Scum &scum);
+void play(Scum &scum);
 
 //Main
 int main(void)
 {
-    Deck deck;
-    initDeck(deck);
-    printDeck(deck);
-    shuffle(deck);
-    printDeck(deck);
+    Scum scum;
+    play(scum);
 }
-
 
 //Function Definitions
 void initDeck(Deck &deck)
@@ -84,7 +97,6 @@ void initDeck(Deck &deck)
             tmpCard.faceVal = (int)tmpCard.rank;
             deck.cards.push_back(tmpCard);
             
-            // card_array[cnt] = tmpCard;
             // cnt++;
         }
     }
@@ -100,7 +112,7 @@ void printDeck(Deck &deck)
 
 void printCard(Card &card)
 {
-    std::cout << card.rank << " of " << card.suit << endl;
+    cout << (Ranks)card.rank << " of " << (Suits)card.suit << endl;
 }
 
 void shuffle(Deck &deck)
@@ -115,4 +127,80 @@ void shuffle(Deck &deck)
     }
 
     deck = tempDeck;
+}
+
+void dealHands(Scum &scum)
+{
+    for(int i = 0; i < scum.handSize; i++)
+    {
+        for(int j = 0 ; j < scum.numPlayers ; j++)
+        {
+            scum.players[j].hand.push_back(scum.deck.cards[0]);
+            scum.deck.cards.erase(scum.deck.cards.begin());
+        }
+    }
+}
+
+void printHand(vector<Card> &hand)
+{
+    cout<<"size of hand: "<<hand.size()<<endl;
+    for(Card card : hand)
+    {
+        printCard(card);
+    }
+}
+
+void initScum(Scum &scum)
+{
+    scum.handSize = scum.deck.deck_size / scum.numPlayers;
+    initDeck(scum.deck);
+    shuffle(scum.deck);
+    addPlayers(scum);
+}
+
+void addPlayers(Scum &scum)
+{
+    for(int i = 0; i < scum.numPlayers; i++)
+    {
+        Player tmp;
+        scum.players.push_back(tmp);
+    }
+}
+
+void showScum(Scum &scum)
+{
+    for(int i = 0 ; i < scum.numPlayers ; i++)
+    {
+        cout<<"Player "<<i + 1<<"'s hand:\n"<<endl;
+        printHand(scum.players[i].hand);
+        cout<<"\n\n";
+    }
+
+    cout<<"Current deck:\n"<<endl;
+    printDeck(scum.deck);
+}
+
+void play(Scum &scum)
+{
+    cout<<"Welcome to Scum! How many players? "<<endl;
+    cin>>scum.numPlayers;
+    initScum(scum);
+    cout<<"Hand sizes: "<<scum.handSize<<endl;
+    dealHands(scum);
+    showScum(scum);
+
+    bool endOfGame = false;
+
+    //Main loop
+    while(!endOfGame)
+    {
+        int currentPlayer = 0;
+
+        currentPlayer = 0 ? currentPlayer = scum.numPlayers - 1 : currentPlayer ++; 
+        if(currentPlayer == scum.numPlayers - 1)
+        {
+            cout<<"END"<<endl;
+            endOfGame = true;       
+        }
+    }
 }
