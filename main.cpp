@@ -104,7 +104,7 @@ void initDeck(Deck &deck)
 
 void printDeck(Deck &deck)
 {
-    for (int i = 0 ; i < deck.deck_size ; i ++)
+    for (int i = 0 ; i < deck.cards.size() ; i ++)
     {
         printCard(deck.cards[i]);
     }
@@ -189,18 +189,23 @@ void play(Scum &scum)
     dealHands(scum);
     showScum(scum);
 
+    cout<<"NUM PLAYERS "<<scum.numPlayers<<endl;
+
     bool endOfGame = false;
+    int currentPlayer = 0;
 
     //Main loop
     while(!endOfGame)
     {
-        int currentPlayer = 0;
-
-        currentPlayer = 0 ? currentPlayer = scum.numPlayers - 1 : currentPlayer ++; 
+        //cout<<"We are here"<<endl;
         if(currentPlayer == scum.numPlayers - 1)
         {
             cout<<"END"<<endl;
             endOfGame = true;       
         }
+        else
+            currentPlayer++;
+        //currentPlayer = 0 ? currentPlayer = scum.numPlayers - 1 : currentPlayer ++; 
+        
     }
 }
