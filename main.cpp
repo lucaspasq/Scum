@@ -1,3 +1,9 @@
+/*  This program contains source code for the Scum card game.
+    All data structures and functions are included in this file.
+    Written by Lucas Pasquarelli
+    CS498 Capstone
+    Fall 2022 Semester
+*/
 #include<iostream>
 #include<string.h>
 #include<vector>
@@ -48,7 +54,8 @@ struct Deck
 struct Player
 {
     vector<Card> hand;
-    string playerName;
+    string playerName; 
+    bool aiFlag;
 };
 
 struct Scum
@@ -59,6 +66,7 @@ struct Scum
     Deck centerCards;
     int numPlayers;
     int handSize = deck.deck_size / numPlayers;
+    int startingPlayer;
 };
 
 //Function declarations
@@ -71,6 +79,9 @@ void dealHands(Scum &scum);
 void printHand(vector<Card> &hand, int handSize);
 void addPlayers(Scum &scum);
 void showScum(Scum &scum);
+void aiHandleTurn(Scum &scum);
+void playerHandleTurn(Scum &scum);
+int findStartingPlayer(Scum &scum);
 void play(Scum &scum);
 
 //Main
@@ -121,6 +132,7 @@ void shuffle(Deck &deck)
 
     while(!deck.cards.empty())
     {
+        srand((unsigned int)time(NULL));
         size_t randIndex = rand() % deck.cards.size();
         tempDeck.cards.push_back(deck.cards[randIndex]);
         deck.cards.erase(deck.cards.begin() + randIndex);
@@ -163,6 +175,10 @@ void addPlayers(Scum &scum)
     for(int i = 0; i < scum.numPlayers; i++)
     {
         Player tmp;
+        if(i < 0)
+        {
+            tmp.aiFlag = 1;
+        }
         scum.players.push_back(tmp);
     }
 }
@@ -180,6 +196,43 @@ void showScum(Scum &scum)
     printDeck(scum.deck);
 }
 
+void aiHandleTurn(Scum &scum)
+{
+    //Check if the center cards is empty
+    if(scum.centerCards.cards.empty())
+    {
+        
+    }
+    else
+    {
+
+    }
+    // Check if has house
+
+}
+
+void playerHandleTurn(Scum &scum)
+{
+
+}
+
+int findStartingPlayer(Scum &scum)
+{
+    Card startingCard;
+    startingCard.suit = Suits(Spades);
+    startingCard.rank = Ranks(Three);
+
+    for(int i = 0 ; i < scum.players.size() ; i ++)
+    {
+        if(count(scum.players[i].hand.begin() , scum.players[i].hand.end() , startingCard))
+        {
+            cout<<"Player " << i << " starts!" << endl;
+            scum.startingPlayer = i;
+            return(i);
+        }
+    }
+}
+
 void play(Scum &scum)
 {
     cout<<"Welcome to Scum! How many players? "<<endl;
@@ -193,6 +246,8 @@ void play(Scum &scum)
 
     bool endOfGame = false;
     int currentPlayer = 0;
+    
+    currentPlayer = findStartingPlayer(scum);
 
     //Main loop
     while(!endOfGame)
@@ -200,11 +255,23 @@ void play(Scum &scum)
         //cout<<"We are here"<<endl;
         if(currentPlayer == scum.numPlayers - 1)
         {
-            cout<<"END"<<endl;
-            endOfGame = true;       
+            currentPlayer = 0;
+            //cout<<"END"<<endl;
+            //endOfGame = true;       
         }
         else
             currentPlayer++;
+
+        if (scum.players[currentPlayer].aiFlag == 1)
+        {
+            // Computer Players turn(s)
+            aiHandleTurn(scum);
+        }
+        else
+        {
+            // Real Players turn
+            playerHandleTurn(scum);
+        }
         //currentPlayer = 0 ? currentPlayer = scum.numPlayers - 1 : currentPlayer ++; 
         
     }
