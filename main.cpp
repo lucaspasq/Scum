@@ -8,6 +8,7 @@
 #include<string.h>
 #include<vector>
 #include<cstdlib>
+#include<algorithm>
 
 using namespace std;
 
@@ -42,6 +43,11 @@ struct Card
     Ranks rank;
     Suits suit;
     int faceVal;
+
+    // inline bool operator==(const Card lhs, const Card rhs)
+    // {
+    //     return (lhs.rank == rhs.rank) && (lhs.suit == rhs.suit) && (lhs.faceval == rhs.faceval);
+    // }
 };
 
 struct Deck
@@ -82,6 +88,9 @@ void showScum(Scum &scum);
 void aiHandleTurn(Scum &scum);
 void playerHandleTurn(Scum &scum);
 int findStartingPlayer(Scum &scum);
+bool containsCard(vector<Card> &hand, Card &card);
+void shedCard(Scum &scum, Card card);
+bool cardsEqual(Card c1, Card c2);
 void play(Scum &scum);
 
 //Main
@@ -123,7 +132,70 @@ void printDeck(Deck &deck)
 
 void printCard(Card &card)
 {
-    cout << (Ranks)card.rank << " of " << (Suits)card.suit << endl;
+    string rankStr, suitStr;
+    switch(card.rank)
+    {
+        case Ranks(2):
+            rankStr = "Two";
+            break;
+        case Ranks(3):
+            rankStr = "Three";
+            break;
+        case Ranks(4):
+            rankStr = "Four";
+            break;
+        case Ranks(5):
+            rankStr = "Five";
+            break;
+        case Ranks(6):
+            rankStr = "Six";
+            break;
+        case Ranks(7):
+            rankStr = "Seven";
+            break;
+        case Ranks(8):
+            rankStr = "Eight";
+            break;
+        case Ranks(9):
+            rankStr = "Nine";
+            break;
+        case Ranks(10):
+            rankStr = "Ten";
+            break;
+        case Ranks(11):
+            rankStr = "Jack";
+            break;
+        case Ranks(12):
+            rankStr = "Queen";
+            break;
+        case Ranks(13):
+            rankStr = "King";
+            break;
+        case Ranks(14):
+            rankStr = "Ace";
+            break;
+        default:
+            rankStr = "Unkown";
+    }
+
+    switch(card.suit)
+    {
+        case Suits(0):
+            suitStr = "Spades";
+            break;
+        case Suits(1):
+            suitStr = "Clubs";
+            break;
+        case Suits(2):
+            suitStr = "Diamonds";
+            break;
+        case Suits(3):
+            suitStr = "Hearts";
+            break;
+        default:
+            suitStr = "Unkown";
+    }
+    cout << rankStr<< " of " << suitStr << endl;
 }
 
 void shuffle(Deck &deck)
@@ -216,20 +288,84 @@ void playerHandleTurn(Scum &scum)
 
 }
 
+void shedCard(Player player, Card card)
+{
+    vector<Card>::iterator pos;
+    int i = 0;
+    //for(int i = 0 ; i <player.hand.size() ; i++)
+    for(pos = player.hand.begin() ; pos < player.hand.end() ; pos++)
+    {
+        if(cardsEqual(player.hand[i], card))
+        {
+            cout<<"Erasing ";
+            printCard(card);
+            cout<<"\n"<<endl;
+            player.hand.erase(pos);
+            return;
+        }
+        i++;
+    }
+}
+
 int findStartingPlayer(Scum &scum)
 {
+    cout<<"Finding starting player\n"<<endl;
     Card startingCard;
     startingCard.suit = Suits(Spades);
     startingCard.rank = Ranks(Three);
+    startingCard.faceVal = (int)startingCard.rank;
 
     for(int i = 0 ; i < scum.players.size() ; i ++)
     {
-        if(count(scum.players[i].hand.begin() , scum.players[i].hand.end() , startingCard))
+        cout<<"Index: "<<i<<endl;
+        //if(count(scum.players[i].hand.begin() , scum.players[i].hand.end() , startingCard))
+        if(containsCard(scum.players[i].hand, startingCard))
         {
             cout<<"Player " << i << " starts!" << endl;
             scum.startingPlayer = i;
+            printHand(scum.players[i].hand);
+            shedCard(scum.players[i], startingCard);
+            printHand(scum.players[i].hand);
             return(i);
         }
+    }
+}
+
+bool containsCard(vector<Card> &hand, Card &card)
+{
+    cout<<"Seeing if hand contains the starting card"<<endl;
+    cout<<"HAND SIZE: "<<hand.size()<<endl;
+    //for(Card c : hand)
+    for(int i = 0 ; i < hand.size() ; i++)
+    {
+        Card c = hand[i];
+        //if((c.faceVal == card.faceVal) && (c.rank == card.rank) && (c.suit == card.suit))
+        if(cardsEqual(c, card))
+        {
+            cout<<"Card is contained in the hand"<<endl;
+            return true;
+        }
+        else
+        {
+            cout<<"Card is not present"<<endl;
+            continue;
+        }
+    }
+        
+    return false;
+}
+
+bool cardsEqual(Card c1, Card c2)
+{
+    if((c1.faceVal == c2.faceVal) && (c1.rank == c2.rank) && (c1.suit == c2.suit))
+    {
+        cout<<"Cards are EQUAL!!!"<<endl;
+        return true;
+    }
+    else
+    {
+        cout<<"Cards are NOT EQUAL..."<<endl;
+        return false;
     }
 }
 
@@ -250,6 +386,7 @@ void play(Scum &scum)
     currentPlayer = findStartingPlayer(scum);
 
     //Main loop
+    cout<<"Entering main loop"<<endl;
     while(!endOfGame)
     {
         //cout<<"We are here"<<endl;
@@ -260,8 +397,9 @@ void play(Scum &scum)
             //endOfGame = true;       
         }
         else
+        {
             currentPlayer++;
-
+        }
         if (scum.players[currentPlayer].aiFlag == 1)
         {
             // Computer Players turn(s)
