@@ -308,6 +308,7 @@ DIST          = ../../../../Qt/6.4.1/macos/mkspecs/features/spec_pre.prf \
 		../../../../Qt/6.4.1/macos/mkspecs/features/qt_config.prf \
 		../../../../Qt/6.4.1/macos/mkspecs/macx-clang/qmake.conf \
 		../../../../Qt/6.4.1/macos/mkspecs/features/spec_post.prf \
+		../ScumGUI/.qmake.stash \
 		../../../../Qt/6.4.1/macos/mkspecs/features/exclusive_builds.prf \
 		../../../../Qt/6.4.1/macos/mkspecs/features/mac/sdk.prf \
 		../../../../Qt/6.4.1/macos/mkspecs/features/toolchain.prf \
@@ -346,7 +347,7 @@ TARGET        = ScumGUI.app/Contents/MacOS/ScumGUI
 EXPORT_QMAKE_MAC_SDK = macosx
 EXPORT_QMAKE_MAC_SDK_VERSION = 11.1
 EXPORT_QMAKE_XCODE_DEVELOPER_PATH = /Library/Developer/CommandLineTools
-EXPORT__QMAKE_STASH_ = 
+EXPORT__QMAKE_STASH_ = /Users/lucaspasquarelli/Documents/GitHub/Scum/build-ScumGUI-Qt_6_4_1_for_macOS-Debug/.qmake.stash
 EXPORT_VALID_ARCHS = x86_64 arm64
 EXPORT_DEFAULT_ARCHS = x86_64
 EXPORT_ARCHS = $(filter $(EXPORT_VALID_ARCHS), $(if $(ARCHS), $(ARCHS), $(if $(EXPORT_DEFAULT_ARCHS), $(EXPORT_DEFAULT_ARCHS), $(EXPORT_VALID_ARCHS))))
@@ -613,6 +614,7 @@ Makefile: ../ScumGUI/ScumGUI.pro ../../../../Qt/6.4.1/macos/mkspecs/macx-clang/q
 		../../../../Qt/6.4.1/macos/mkspecs/features/qt_config.prf \
 		../../../../Qt/6.4.1/macos/mkspecs/macx-clang/qmake.conf \
 		../../../../Qt/6.4.1/macos/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		../../../../Qt/6.4.1/macos/mkspecs/features/exclusive_builds.prf \
 		../../../../Qt/6.4.1/macos/mkspecs/features/mac/sdk.prf \
 		../../../../Qt/6.4.1/macos/mkspecs/features/toolchain.prf \
@@ -897,6 +899,7 @@ Makefile: ../ScumGUI/ScumGUI.pro ../../../../Qt/6.4.1/macos/mkspecs/macx-clang/q
 ../../../../Qt/6.4.1/macos/mkspecs/features/qt_config.prf:
 ../../../../Qt/6.4.1/macos/mkspecs/macx-clang/qmake.conf:
 ../../../../Qt/6.4.1/macos/mkspecs/features/spec_post.prf:
+.qmake.stash:
 ../../../../Qt/6.4.1/macos/mkspecs/features/exclusive_builds.prf:
 ../../../../Qt/6.4.1/macos/mkspecs/features/mac/sdk.prf:
 ../../../../Qt/6.4.1/macos/mkspecs/features/toolchain.prf:
@@ -970,6 +973,7 @@ clean: compiler_clean
 
 distclean: clean 
 	-$(DEL_FILE) -r ScumGUI.app
+	-$(DEL_FILE) .qmake.stash
 	-$(DEL_FILE) Makefile
 
 

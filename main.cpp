@@ -241,6 +241,7 @@ void initScum(Scum &scum)
     initDeck(scum.deck);
     shuffle(scum.deck);
     addPlayers(scum);
+    scum.currentPlayer = findStartingPlayer(scum);
 }
 
 void addPlayers(Scum &scum)
@@ -286,10 +287,17 @@ void aiHandleTurn(Scum &scum)
 
 void playerHandleTurn(Scum &scum)
 {
+    //This function must interface with the gui, giving th eplayer options for what to play
+    int rankToShed;
+    cout<<"Select a card or card(s) to shed."<<endl; 
+    cout<<"Remember, singles cant play on top of doubles, and doubles cant play on top of triples!"<<endl;
 
+    cin>>rankToShed;
+
+    // containsCard(scum.)
 }
 
-void shedCard(Player player, Card card)
+void shedCard(Player &player, Card card, Scum &scum)
 {
     vector<Card>::iterator pos;
     int i = 0;
@@ -302,6 +310,12 @@ void shedCard(Player player, Card card)
             printCard(card);
             cout<<"\n"<<endl;
             player.hand.erase(pos);
+            cout<<"Adding card to top of pile\n"<<endl;
+            cout<<"Center before adding\n"<<endl;
+            printDeck(scum.centerCards);
+            scum.centerCards.cards.push_back(card); //add the card to the top of the pile
+            cout<<"After adding the card \n"<<endl;
+            printDeck(scum.centerCards);
             return;
         }
         i++;
@@ -325,7 +339,7 @@ int findStartingPlayer(Scum &scum)
             cout<<"Player " << i << " starts!" << endl;
             scum.startingPlayer = i;
             printHand(scum.players[i].hand);
-            shedCard(scum.players[i], startingCard);
+            shedCard(scum.players[i], startingCard, scum);
             printHand(scum.players[i].hand);
             return(i);
         }
@@ -370,6 +384,41 @@ bool cardsEqual(Card c1, Card c2)
     }
 }
 
+void setSDT(Scum &scum)
+{
+    // Card temp;
+    size_t i = 0;
+    vector<Card>::iterator pos;
+
+    if(scum.centerCards.cards.empty())
+    {
+        scum.singleDoubleTriple = 0;
+        return;
+    }
+
+    else
+    {
+        for(pos = scum.centerCards.cards.begin() ; pos < scum.centerCards.cards.end() ; pos++)
+        {
+            // temp = scum.centerCards.cards[i];
+            if(scum.centerCards.cards[i].rank == scum.centerCards.cards[i+1].rank)
+            {
+                scum.singleDoubleTriple++;
+                i++;
+            }
+            else
+                break;
+        }
+
+        return;
+    }
+}
+
+void checkSingleDoubleTriple(Scum &scum)
+{
+
+}
+
 void play(Scum &scum)
 {
     cout<<"Welcome to Scum! How many players? "<<endl;
@@ -382,26 +431,26 @@ void play(Scum &scum)
     cout<<"NUM PLAYERS "<<scum.numPlayers<<endl;
 
     bool endOfGame = false;
-    int currentPlayer = 0;
+    // int currentPlayer = 0;
     
-    currentPlayer = findStartingPlayer(scum);
+    // currentPlayer = findStartingPlayer(scum);
 
     //Main loop
     cout<<"Entering main loop"<<endl;
     while(!endOfGame)
     {
         //cout<<"We are here"<<endl;
-        if(currentPlayer == scum.numPlayers - 1)
+        if(scum.currentPlayer == scum.numPlayers - 1)
         {
-            currentPlayer = 0;
+            scum.currentPlayer = 0;
             //cout<<"END"<<endl;
             //endOfGame = true;       
         }
         else
         {
-            currentPlayer++;
+            scum.currentPlayer++;
         }
-        if (scum.players[currentPlayer].aiFlag == 1)
+        if (scum.players[scum.currentPlayer].aiFlag == 1)
         {
             // Computer Players turn(s)
             aiHandleTurn(scum);

@@ -62,8 +62,10 @@ struct Scum
     Deck deck;
     Deck muck;
     Deck centerCards;
+    int singleDoubleTriple = 0;
     int numPlayers;
     int handSize = deck.deck_size / numPlayers;
+    int currentPlayer;
     int startingPlayer;
 };
 
@@ -81,6 +83,7 @@ void aiHandleTurn(Scum &scum);
 void playerHandleTurn(Scum &scum);
 int findStartingPlayer(Scum &scum);
 bool containsCard(vector<Card> &hand, Card &card);
-void shedCard(Scum &scum, Card card);
+void shedCard(Player &player, Card card, Scum &scum);
 bool cardsEqual(Card c1, Card c2);
+void checkSingleDoubleTriple(Scum &scum);
 void play(Scum &scum);
