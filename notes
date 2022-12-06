@@ -1,0 +1,8 @@
+floating point acception might have to do with the startingPlayer variable in the scum structure, 
+
+After scum struct gets created, it throws the error.
+
+
+For the GUI:
+    - Could use Python (Tkinter, Qt, etc..) and just use os package to run the CPP script
+    - Feature a home screen, Rules Page, and the play button just opens a terminal

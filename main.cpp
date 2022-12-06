@@ -9,95 +9,17 @@
 #include<vector>
 #include<cstdlib>
 #include<algorithm>
+#include<unistd.h>
 #include "main.h"
 
 using namespace std;
 
-// //data types/structures
-// enum Ranks
-// {
-//     Two = 2,
-//     Three,
-//     Four,
-//     Five,
-//     Six,
-//     Seven,
-//     Eight,
-//     Nine,
-//     Ten,
-//     Jack,
-//     Queen,
-//     King,
-//     Ace
-// };
-
-// enum Suits
-// {
-//     Spades,
-//     Clubs,
-//     Diamonds,
-//     Hearts
-// };
-
-// struct Card 
-// {
-//     Ranks rank;
-//     Suits suit;
-//     int faceVal;
-
-//     // inline bool operator==(const Card lhs, const Card rhs)
-//     // {
-//     //     return (lhs.rank == rhs.rank) && (lhs.suit == rhs.suit) && (lhs.faceval == rhs.faceval);
-//     // }
-// };
-
-// struct Deck
-// {
-//     //Card card_array[52];
-//     vector<Card> cards;
-//     int deck_size = 52;
-// };
-
-// struct Player
-// {
-//     vector<Card> hand;
-//     string playerName; 
-//     bool aiFlag;
-// };
-
-// struct Scum
-// {
-//     vector<Player> players;
-//     Deck deck;
-//     Deck muck;
-//     Deck centerCards;
-//     int numPlayers;
-//     int handSize = deck.deck_size / numPlayers;
-//     int startingPlayer;
-// };
-
-// //Function declarations
-// void initScum(Scum &scum);
-// void initDeck(Deck &deck);
-// void printDeck(Deck &deck);
-// void printCard(Card &card);
-// void shuffle(Deck &deck);
-// void dealHands(Scum &scum);
-// void printHand(vector<Card> &hand, int handSize);
-// void addPlayers(Scum &scum);
-// void showScum(Scum &scum);
-// void aiHandleTurn(Scum &scum);
-// void playerHandleTurn(Scum &scum);
-// int findStartingPlayer(Scum &scum);
-// bool containsCard(vector<Card> &hand, Card &card);
-// void shedCard(Scum &scum, Card card);
-// bool cardsEqual(Card c1, Card c2);
-// void play(Scum &scum);
-
 //Main
 int main(void)
 {
+    cout<<"WE start"<<endl;
     Scum scum;
+    cout<<"HERE"<<endl;
     play(scum);
 }
 
@@ -288,13 +210,43 @@ void aiHandleTurn(Scum &scum)
 void playerHandleTurn(Scum &scum)
 {
     //This function must interface with the gui, giving th eplayer options for what to play
-    int rankToShed;
-    cout<<"Select a card or card(s) to shed."<<endl; 
-    cout<<"Remember, singles cant play on top of doubles, and doubles cant play on top of triples!"<<endl;
 
-    cin>>rankToShed;
+    bool activeTurn = true;
 
-    // containsCard(scum.)
+    while(activeTurn)
+    {
+        int intRankToShed;
+        cout<<"Select a card or card(s) to shed."<<endl; 
+        cout<<"Remember, singles cant play on top of doubles, and doubles cant play on top of triples!"<<endl;
+
+        cin>>intRankToShed;
+
+        Ranks ranktoShed = Ranks(intRankToShed);
+        int numRankinHand = countRankinHand(scum, ranktoShed);
+
+        if(scum.centerCards.cards.empty())
+        {
+            // int numCardstoShed = countRankinHand(scum, ranktoShed);
+            shedRank(ranktoShed, scum.players[scum.currentPlayer], scum);
+
+            //Turn is over
+            activeTurn = false;
+        }
+        else
+        {
+            if(numRankinHand >= scum.singleDoubleTriple)
+            {
+                shedRank(ranktoShed, scum.players[scum.currentPlayer], scum);
+                activeTurn = false;
+            }
+
+            else  
+            { 
+                cout<<"Not enough of that rank in your hand."<<endl; 
+                continue;
+            }
+        }
+    }
 }
 
 void shedCard(Player &player, Card card, Scum &scum)
@@ -322,6 +274,24 @@ void shedCard(Player &player, Card card, Scum &scum)
     }
 }
 
+void shedRank(Ranks ranktoShed, Player &player, Scum &scum)
+{
+    vector<Card>::iterator pos;
+    int i = 0;
+
+    for(pos = player.hand.begin(); pos < player.hand.end() ; pos++)
+    {
+        if(ranksEqual(player.hand[i].rank, ranktoShed))
+        {
+            Card tmp = player.hand[i];
+            player.hand.erase(pos);
+            scum.centerCards.cards.push_back(tmp);
+        }
+
+        i++;
+    }
+}
+
 int findStartingPlayer(Scum &scum)
 {
     cout<<"Finding starting player\n"<<endl;
@@ -338,9 +308,9 @@ int findStartingPlayer(Scum &scum)
         {
             cout<<"Player " << i << " starts!" << endl;
             scum.startingPlayer = i;
-            printHand(scum.players[i].hand);
+            // printHand(scum.players[i].hand);
             shedCard(scum.players[i], startingCard, scum);
-            printHand(scum.players[i].hand);
+            // printHand(scum.players[i].hand);
             return(i);
         }
     }
@@ -384,6 +354,15 @@ bool cardsEqual(Card c1, Card c2)
     }
 }
 
+bool ranksEqual(Ranks r1, Ranks r2)
+{
+    if(r1 == r2)
+        return true;
+
+    else
+        return false;
+}
+
 void setSDT(Scum &scum)
 {
     // Card temp;
@@ -416,7 +395,32 @@ void setSDT(Scum &scum)
 
 void checkSingleDoubleTriple(Scum &scum)
 {
+    if(countRankinHand(scum, scum.centerCards.cards.back().rank) >= scum.singleDoubleTriple)
+}
 
+int countRankinHand(Scum &scum, int ranktoShed)
+{
+    int numCards = 0;
+    //for(vector<Card>::iterator c = scum.players[scum.currentPlayer].hand.begin() ; c < scum.players[scum.currentPlayer].hand.end() ; c++)
+    for(size_t i = 0 ; i < scum.players[scum.currentPlayer].hand.size() ; i++)
+    {
+        if(scum.players[scum.currentPlayer].hand[i].rank == Ranks(ranktoShed))
+        {
+            numCards++;
+        }
+        //cout<<*c<<endl;
+        // Card card = *c;
+        // if(card.rank == (Rank)ranktoShed)
+        // {
+        //     numCards++;
+        // }
+    }
+    return numCards;
+}
+
+void checkHouse(Scum &scum, Player &player)
+{
+    if()
 }
 
 void play(Scum &scum)
@@ -454,12 +458,32 @@ void play(Scum &scum)
         {
             // Computer Players turn(s)
             aiHandleTurn(scum);
+            sleep(1);
         }
         else
         {
             // Real Players turn
             playerHandleTurn(scum);
+            sleep(1);
         }
+
+        //After turn is over, check for house calls
+        for(int i = 0 ; i < scum.numPlayers ; i++)
+        {
+            scum.currentPlayer = (i + scum.currentPlayer) % scum.numPlayers;
+
+            cout<<"HOUSE CHECK, PLAYER "<<scum.currentPlayer<<endl;
+
+            checkHouse(scum, scum.players[scum.currentPlayer]);
+            sleep(1);
+
+            if(scum.players[scum.currentPlayer].hand.empty())
+            {
+                endOfGame = true;
+                cout<<"Player "<<scum.currentPlayer + 1<<"wins!!!";
+            }
+        }
+
         //currentPlayer = 0 ? currentPlayer = scum.numPlayers - 1 : currentPlayer ++; 
         
     }

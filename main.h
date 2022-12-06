@@ -44,7 +44,6 @@ struct Card
 
 struct Deck
 {
-    //Card card_array[52];
     vector<Card> cards;
     int deck_size = 52;
 };
@@ -84,6 +83,10 @@ void playerHandleTurn(Scum &scum);
 int findStartingPlayer(Scum &scum);
 bool containsCard(vector<Card> &hand, Card &card);
 void shedCard(Player &player, Card card, Scum &scum);
+void shedRank(Ranks ranktoShed, Player &player, Scum &scum);
 bool cardsEqual(Card c1, Card c2);
+bool ranksEqual(Ranks r1, Ranks r2);
 void checkSingleDoubleTriple(Scum &scum);
+int countRankinHand(Scum &scum, Ranks rank);
+void checkHouse(Scum &scum, Player &player);
 void play(Scum &scum);

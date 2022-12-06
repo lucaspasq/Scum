@@ -11,9 +11,11 @@ CONFIG += c++17
 SOURCES += \
     main.cpp \
     scumgui.cpp
+    ../main.cpp
 
 HEADERS += \
     scumgui.h
+    ../main.h
 
 FORMS += \
     scumgui.ui
