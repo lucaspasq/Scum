@@ -17,9 +17,7 @@ using namespace std;
 //Main
 int main(void)
 {
-    cout<<"WE start"<<endl;
     Scum scum;
-    cout<<"HERE"<<endl;
     play(scum);
 }
 
@@ -148,6 +146,21 @@ void dealHands(Scum &scum)
     }
 }
 
+bool compareRank(Card &c1 , Card &c2)
+{
+    return c1.rank > c2.rank;
+}
+
+void sortHands(Scum &scum)
+{
+    for(int i = 0 ; i < scum.numPlayers ; i ++)
+    {
+        sort(scum.players[i].hand.begin(), scum.players[i].hand.end(), compareRank);
+        //cout<<"SORTED HAND"<<endl;
+        //showScum(scum);
+    }
+}
+
 void printHand(vector<Card> &hand)
 {
     cout<<"size of hand: "<<hand.size()<<endl;
@@ -163,7 +176,6 @@ void initScum(Scum &scum)
     initDeck(scum.deck);
     shuffle(scum.deck);
     addPlayers(scum);
-    scum.currentPlayer = findStartingPlayer(scum);
 }
 
 void addPlayers(Scum &scum)
@@ -186,9 +198,10 @@ void showScum(Scum &scum)
         cout<<"Player "<<i + 1<<"'s hand:\n"<<endl;
         printHand(scum.players[i].hand);
         cout<<"\n\n";
+        sleep(1);
     }
 
-    cout<<"Current deck:\n"<<endl;
+    //cout<<"Current deck:\n"<<endl;
     printDeck(scum.deck);
 }
 
@@ -215,34 +228,102 @@ void playerHandleTurn(Scum &scum)
 
     while(activeTurn)
     {
+        // string strRanktoShed;
         int intRankToShed;
-        cout<<"Select a card or card(s) to shed."<<endl; 
+        cout<<"\nSelect a card or card(s) to shed."<<endl; 
         cout<<"Remember, singles cant play on top of doubles, and doubles cant play on top of triples!"<<endl;
+        cout<<"Playing a 2 will clear the center and play any card(s)."<<endl;
+        cout<<"Enter 0 to pass your turn!"<<endl;
 
         cin>>intRankToShed;
 
+        if(intRankToShed == 0)
+        {
+            if(scum.centerCards.cards.empty())
+            {
+                cout<<"You cannot pass when the center is empty!"<<endl;
+                continue;
+            }
+            
+            cout<<"Passing player "<<scum.currentPlayer<<"'s turn."<<endl;
+            activeTurn = false;
+            continue;
+        }
+
         Ranks ranktoShed = Ranks(intRankToShed);
-        int numRankinHand = countRankinHand(scum, ranktoShed);
+        int numRankinHand = countRankinHand(scum, (int)ranktoShed);
+        if(numRankinHand == 0)
+        {
+            cout<<"\nYou don't have any of that rank in your hand! Try again."<<endl;
+            continue;
+        }
+        //cout<<"NUM RANK IN HAND: "<<numRankinHand<<endl;
+        //cout<<"RANK TO SHED "<<(int)ranktoShed<<endl;
 
         if(scum.centerCards.cards.empty())
         {
-            // int numCardstoShed = countRankinHand(scum, ranktoShed);
-            shedRank(ranktoShed, scum.players[scum.currentPlayer], scum);
+            if(ranktoShed == Ranks::Two)
+            {
+                cout<<"You cannot play a 2 over an empty center!"<<endl;
+                continue;
+            }
+            else
+            {
+                // int numCardstoShed = countRankinHand(scum, ranktoShed);
+                for(int i = 0; i < numRankinHand ; i++)
+                {
+                    shedRank(ranktoShed, scum.players[scum.currentPlayer-1], scum);
+                }
+                setSDT(scum);
+                //cout<<"SDT SET TO "<<scum.singleDoubleTriple<<endl;
 
-            //Turn is over
-            activeTurn = false;
+                //Turn is over
+                activeTurn = false;
+            }
         }
         else
         {
-            if(numRankinHand >= scum.singleDoubleTriple)
+            if(ranktoShed == Ranks::Two)
             {
-                shedRank(ranktoShed, scum.players[scum.currentPlayer], scum);
-                activeTurn = false;
+                numRankinHand = 1;
+                shedRank(ranktoShed, scum.players[scum.currentPlayer-1], scum);
+                scum.centerCards.cards.clear();
+                scum.singleDoubleTriple = 0;
+                cout<<"Clearing the center..."<<endl;
+                //cout<<"SDT = "<<scum.singleDoubleTriple<<endl;
+                printDeck(scum.centerCards);
+                continue;
             }
+            else if(ranktoShed == scum.centerCards.cards.back().rank)
+            {
+                if(numRankinHand >= 1 && scum.singleDoubleTriple == 1)
+                {
+                    scum.skipFlag = true;
+                    //cout<<"SKIPPING SET TO TRUE"<<endl;
+                    shedRank(ranktoShed, scum.players[scum.currentPlayer-1], scum);
+                    activeTurn = false;
+                }
+            }
+            else if(ranktoShed > scum.centerCards.cards.back().rank)
+            {
+                if(numRankinHand >= scum.singleDoubleTriple)
+                {
+                    for(int i = 0; i < numRankinHand ; i ++)
+                    {
+                        shedRank(ranktoShed, scum.players[scum.currentPlayer-1], scum);
+                    }
+                    activeTurn = false;
+                }
 
-            else  
-            { 
-                cout<<"Not enough of that rank in your hand."<<endl; 
+                else  
+                { 
+                    cout<<"Not enough of that rank in your hand."<<endl; 
+                    continue;
+                }
+            }
+            else
+            {
+                cout<<"Cannot play a rank lower that what is on top of the center cards!"<<endl;
                 continue;
             }
         }
@@ -263,10 +344,7 @@ void shedCard(Player &player, Card card, Scum &scum)
             cout<<"\n"<<endl;
             player.hand.erase(pos);
             cout<<"Adding card to top of pile\n"<<endl;
-            cout<<"Center before adding\n"<<endl;
-            printDeck(scum.centerCards);
             scum.centerCards.cards.push_back(card); //add the card to the top of the pile
-            cout<<"After adding the card \n"<<endl;
             printDeck(scum.centerCards);
             return;
         }
@@ -278,23 +356,68 @@ void shedRank(Ranks ranktoShed, Player &player, Scum &scum)
 {
     vector<Card>::iterator pos;
     int i = 0;
+    int numCardsShedded = 0;
 
-    for(pos = player.hand.begin(); pos < player.hand.end() ; pos++)
+    // Shed all of the rank in the hand if the center is empty
+    if(scum.centerCards.cards.empty())
     {
-        if(ranksEqual(player.hand[i].rank, ranktoShed))
-        {
-            Card tmp = player.hand[i];
-            player.hand.erase(pos);
-            scum.centerCards.cards.push_back(tmp);
-        }
+        scum.singleDoubleTriple = countRankinHand(scum, ranktoShed);
+        //cout<<"SDT SET TO "<<scum.singleDoubleTriple<<endl;
 
-        i++;
+        for(pos = player.hand.begin(); pos != player.hand.end() ; pos++)
+        {
+            if(ranksEqual(player.hand[i].rank, ranktoShed))
+            {
+                Card tmp = player.hand[i];
+                player.hand.erase(pos);
+                scum.centerCards.cards.push_back(tmp);
+                numCardsShedded++;
+
+                //cout<<"SHEDDING A "<<player.hand[i].rank<<endl;
+                return;
+            }
+
+            i++;
+        }
+    }
+    
+    //if center is not empty, shed SDT amount of cards
+    else
+    {
+        for(pos = player.hand.begin(); pos != player.hand.end() ; pos++)
+        {
+            if(ranksEqual(player.hand[i].rank, ranktoShed))
+            {
+                Card tmp = player.hand[i];
+                player.hand.erase(pos);
+                scum.centerCards.cards.push_back(tmp);
+                numCardsShedded++;
+
+                //cout<<"SHEDDED "<<numCardsShedded<<" "<<ranktoShed<<"'S"<<endl;
+                if(ranktoShed == Ranks::Two)
+                {
+                    if(numCardsShedded == 1)
+                    {
+                        //cout<<"DONE SHEDDING A 2"<<endl;
+                        return;
+                    }
+                }
+                else if(numCardsShedded == scum.singleDoubleTriple)
+                {
+                    //cout<<"DONE SHEDDING "<<numCardsShedded<<" CARDS"<<endl;
+                    return;
+                }            
+            }
+
+            i++;
+        }
     }
 }
 
 int findStartingPlayer(Scum &scum)
 {
     cout<<"Finding starting player\n"<<endl;
+    sleep(1);
     Card startingCard;
     startingCard.suit = Suits(Spades);
     startingCard.rank = Ranks(Three);
@@ -302,37 +425,34 @@ int findStartingPlayer(Scum &scum)
 
     for(int i = 0 ; i < scum.players.size() ; i ++)
     {
-        cout<<"Index: "<<i<<endl;
-        //if(count(scum.players[i].hand.begin() , scum.players[i].hand.end() , startingCard))
         if(containsCard(scum.players[i].hand, startingCard))
         {
-            cout<<"Player " << i << " starts!" << endl;
-            scum.startingPlayer = i;
+            cout<<"Player " << i+1 << " starts!" << endl;
+            // scum.startingPlayer = i+1;
             // printHand(scum.players[i].hand);
             shedCard(scum.players[i], startingCard, scum);
+            scum.singleDoubleTriple = 1;
             // printHand(scum.players[i].hand);
-            return(i);
+            return(i+1);
         }
     }
+    return 0;
 }
 
 bool containsCard(vector<Card> &hand, Card &card)
 {
-    cout<<"Seeing if hand contains the starting card"<<endl;
-    cout<<"HAND SIZE: "<<hand.size()<<endl;
-    //for(Card c : hand)
     for(int i = 0 ; i < hand.size() ; i++)
     {
         Card c = hand[i];
-        //if((c.faceVal == card.faceVal) && (c.rank == card.rank) && (c.suit == card.suit))
+
         if(cardsEqual(c, card))
         {
-            cout<<"Card is contained in the hand"<<endl;
+            //cout<<"Card is contained in the hand"<<endl;
             return true;
         }
         else
         {
-            cout<<"Card is not present"<<endl;
+            //cout<<"Card is not present"<<endl;
             continue;
         }
     }
@@ -344,12 +464,12 @@ bool cardsEqual(Card c1, Card c2)
 {
     if((c1.faceVal == c2.faceVal) && (c1.rank == c2.rank) && (c1.suit == c2.suit))
     {
-        cout<<"Cards are EQUAL!!!"<<endl;
+        //cout<<"Cards are EQUAL!!!"<<endl;
         return true;
     }
     else
     {
-        cout<<"Cards are NOT EQUAL..."<<endl;
+        //cout<<"Cards are NOT EQUAL..."<<endl;
         return false;
     }
 }
@@ -366,8 +486,8 @@ bool ranksEqual(Ranks r1, Ranks r2)
 void setSDT(Scum &scum)
 {
     // Card temp;
-    size_t i = 0;
-    vector<Card>::iterator pos;
+    //size_t i = 0;
+    //vector<Card>::iterator pos;
 
     if(scum.centerCards.cards.empty())
     {
@@ -377,7 +497,9 @@ void setSDT(Scum &scum)
 
     else
     {
-        for(pos = scum.centerCards.cards.begin() ; pos < scum.centerCards.cards.end() ; pos++)
+        scum.singleDoubleTriple = 1;
+        //for(pos = scum.centerCards.cards.begin() ; pos < scum.centerCards.cards.end() ; pos++)
+        for(int i = 0 ; i < scum.centerCards.cards.size() ; i++)
         {
             // temp = scum.centerCards.cards[i];
             if(scum.centerCards.cards[i].rank == scum.centerCards.cards[i+1].rank)
@@ -389,22 +511,27 @@ void setSDT(Scum &scum)
                 break;
         }
 
+        //cout<<"IN setSDT, SDT SET TO "<<scum.singleDoubleTriple<<endl;
         return;
     }
 }
 
-void checkSingleDoubleTriple(Scum &scum)
-{
-    if(countRankinHand(scum, scum.centerCards.cards.back().rank) >= scum.singleDoubleTriple)
-}
+// Function to check if player has enough of a rank to play on top of the center
+// void checkSDT(Scum &scum, Ranks rank)
+// {
+//     if(countRankinHand(scum, scum.centerCards.cards.back().rank) >= scum.singleDoubleTriple)
+//     {
+
+//     }
+// }
 
 int countRankinHand(Scum &scum, int ranktoShed)
 {
     int numCards = 0;
     //for(vector<Card>::iterator c = scum.players[scum.currentPlayer].hand.begin() ; c < scum.players[scum.currentPlayer].hand.end() ; c++)
-    for(size_t i = 0 ; i < scum.players[scum.currentPlayer].hand.size() ; i++)
+    for(size_t i = 0 ; i < scum.players[scum.currentPlayer-1].hand.size() ; i++)
     {
-        if(scum.players[scum.currentPlayer].hand[i].rank == Ranks(ranktoShed))
+        if(scum.players[scum.currentPlayer-1].hand[i].rank == Ranks(ranktoShed))
         {
             numCards++;
         }
@@ -420,7 +547,56 @@ int countRankinHand(Scum &scum, int ranktoShed)
 
 void checkHouse(Scum &scum, Player &player)
 {
-    if()
+    int houseRank = int(scum.centerCards.cards.back().rank);
+    //cout<<"HOUSE RANK = "<<houseRank<<endl;
+    int totalinCenter = 0;
+    int houseRankinHand = countRankinHand(scum, houseRank);
+    for(int i = 0 ; i < scum.centerCards.cards.size() ; i++)
+    {
+        if(scum.centerCards.cards[i].rank == houseRank)
+        {
+            totalinCenter++;
+        }
+    }
+    int result = houseRankinHand + totalinCenter;
+    bool responded = false;
+
+    if(result == 4)
+    {  
+        // int housePlayer = scum.currentPlayer + 1;
+        // if(housePlayer = scum.numPlayers + 1)
+        // {
+        //     housePlayer = 1;
+        // } 
+        cout<<"Player "<<scum.currentPlayer<<"Can call house! Enter Y/N:"<<endl;
+        string inputStr;
+        cin>>inputStr;
+    
+        while(!responded)
+        {
+            if(inputStr == "y" || inputStr == "Y")
+            {
+                responded = true;
+                scum.skipFlag = false;
+                scum.houseFlag = true;
+                for(int i = 0; i < houseRankinHand ; i++)
+                {
+                    shedRank(Ranks(houseRank), player, scum);
+                }
+                scum.centerCards.cards.clear();
+                scum.singleDoubleTriple = 0;
+                return;
+            }
+            else if (inputStr == "n" || inputStr == "N")
+            {
+                responded = true;
+                cout<<"Continuing on..."<<endl;
+                return;
+            }
+            else
+                cout<<"Invalid input, try again."<<endl;
+        }
+    }
 }
 
 void play(Scum &scum)
@@ -428,11 +604,11 @@ void play(Scum &scum)
     cout<<"Welcome to Scum! How many players? "<<endl;
     cin>>scum.numPlayers;
     initScum(scum);
-    cout<<"Hand sizes: "<<scum.handSize<<endl;
     dealHands(scum);
+    sortHands(scum);
+    scum.currentPlayer = findStartingPlayer(scum);
+    sleep(1);
     showScum(scum);
-
-    cout<<"NUM PLAYERS "<<scum.numPlayers<<endl;
 
     bool endOfGame = false;
     // int currentPlayer = 0;
@@ -440,21 +616,22 @@ void play(Scum &scum)
     // currentPlayer = findStartingPlayer(scum);
 
     //Main loop
-    cout<<"Entering main loop"<<endl;
+    //cout<<"Entering main loop"<<endl;
     while(!endOfGame)
     {
         //cout<<"We are here"<<endl;
-        if(scum.currentPlayer == scum.numPlayers - 1)
-        {
-            scum.currentPlayer = 0;
-            //cout<<"END"<<endl;
-            //endOfGame = true;       
-        }
-        else
-        {
-            scum.currentPlayer++;
-        }
-        if (scum.players[scum.currentPlayer].aiFlag == 1)
+        
+        cout<<"Center Cards:"<<endl;
+        printDeck(scum.centerCards);
+        cout<<"------------------------------------------------------------------------------------"<<endl;
+        //setSDT(scum);
+        //cout<<"SDT: "<<scum.singleDoubleTriple<<endl;
+        cout<<"\nIT IS PLAYER "<<scum.currentPlayer<<"'S TURN\n"<<endl;
+        cout<<"CURRENT HAND\n"<<endl;
+        printHand(scum.players[scum.currentPlayer-1].hand);
+        cout<<"\nCENTER CARDS:"<<endl;
+        printDeck(scum.centerCards);
+        if(scum.players[scum.currentPlayer-1].aiFlag == 1)
         {
             // Computer Players turn(s)
             aiHandleTurn(scum);
@@ -467,21 +644,68 @@ void play(Scum &scum)
             sleep(1);
         }
 
+        //check for empty hand after the turn
+        if(scum.players[scum.currentPlayer].hand.empty())
+        {
+            cout<<"Player "<<scum.currentPlayer<<" wins!!!"<<endl;
+            endOfGame = true;
+            continue;
+        }
+        //cout<<"TURN HANDLED, CHECKING HOUSES NOW"<<endl;
+
+        //save the current player left off on
+        int temp = scum.currentPlayer;
+
         //After turn is over, check for house calls
-        for(int i = 0 ; i < scum.numPlayers ; i++)
+        for(int i = 1 ; i <= scum.numPlayers ; i++)
         {
             scum.currentPlayer = (i + scum.currentPlayer) % scum.numPlayers;
+            if(scum.currentPlayer == 0)
+            {
+                scum.currentPlayer = scum.numPlayers;
+            }
+            else if(scum.currentPlayer == temp)
+            {
+                continue;
+            }
+            
+            //cout<<"HOUSE CHECK, PLAYER "<<scum.currentPlayer<<endl;
 
-            cout<<"HOUSE CHECK, PLAYER "<<scum.currentPlayer<<endl;
-
-            checkHouse(scum, scum.players[scum.currentPlayer]);
+            checkHouse(scum, scum.players[scum.currentPlayer-1]);
+            if(scum.houseFlag)
+            {
+                scum.houseFlag = false;
+                break;
+            }
             sleep(1);
 
-            if(scum.players[scum.currentPlayer].hand.empty())
+            //check for empty hand after house calls
+            if(scum.players[scum.currentPlayer-1].hand.empty())
             {
                 endOfGame = true;
-                cout<<"Player "<<scum.currentPlayer + 1<<"wins!!!";
+                cout<<"Player "<<scum.currentPlayer<<"wins!!!";
             }
+            if(!scum.houseFlag)
+            {
+                scum.currentPlayer = temp;
+            }
+            scum.houseFlag = false;
+        }
+    
+        scum.currentPlayer++;
+        if(scum.currentPlayer == scum.numPlayers + 1)
+        {
+            scum.currentPlayer = 1;
+        }
+        if(scum.skipFlag)
+        {
+            cout<<"Skipping player "<<scum.currentPlayer<<"!"<<endl;
+            scum.currentPlayer++;
+            scum.skipFlag = false;
+        }
+        if(scum.currentPlayer == scum.numPlayers + 1)
+        {
+            scum.currentPlayer = 1;
         }
 
         //currentPlayer = 0 ? currentPlayer = scum.numPlayers - 1 : currentPlayer ++; 

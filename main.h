@@ -62,10 +62,12 @@ struct Scum
     Deck muck;
     Deck centerCards;
     int singleDoubleTriple = 0;
-    int numPlayers;
+    int numPlayers = 1;
     int handSize = deck.deck_size / numPlayers;
     int currentPlayer;
     int startingPlayer;
+    bool skipFlag = false;
+    bool houseFlag = false;
 };
 
 //Function declarations
@@ -75,7 +77,9 @@ void printDeck(Deck &deck);
 void printCard(Card &card);
 void shuffle(Deck &deck);
 void dealHands(Scum &scum);
-void printHand(vector<Card> &hand, int handSize);
+bool compareRank(Card &c1, Card &c2);
+void sortHands(Scum &scum);
+void printHand(vector<Card> &hand);
 void addPlayers(Scum &scum);
 void showScum(Scum &scum);
 void aiHandleTurn(Scum &scum);
@@ -86,7 +90,8 @@ void shedCard(Player &player, Card card, Scum &scum);
 void shedRank(Ranks ranktoShed, Player &player, Scum &scum);
 bool cardsEqual(Card c1, Card c2);
 bool ranksEqual(Ranks r1, Ranks r2);
-void checkSingleDoubleTriple(Scum &scum);
-int countRankinHand(Scum &scum, Ranks rank);
+void setSDT(Scum &scum);
+int countRankinHand(Scum &scum, int rank);
 void checkHouse(Scum &scum, Player &player);
+// void callHouse(SCum &scum, Ranks rank);
 void play(Scum &scum);

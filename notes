@@ -6,3 +6,8 @@ After scum struct gets created, it throws the error.
 For the GUI:
     - Could use Python (Tkinter, Qt, etc..) and just use os package to run the CPP script
     - Feature a home screen, Rules Page, and the play button just opens a terminal
+
+- Have to incorporate two's!!!
+
+
+throwing a 2 then playing a single card will seg fault
